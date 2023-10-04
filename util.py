@@ -110,7 +110,6 @@ def smooth_power_map_v2(power_map):
     for r in range(row):
         for c in range(col):
             if power_map[r,c]!=0 and visited[r,c]==0:
-                # oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooyyyyyyyyyyyy  written by Lingling
                 if r-1>=0 and power_map[r-1,c]==0 :
                     power_map[r-1,c]=power_map[r,c]/2
                     visited[r-1,c]=1
@@ -128,7 +127,6 @@ def smooth_power_map_v2(power_map):
                     visited[r,c+1]=1
 
 
-                # oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooyyyyyyyyyyyy  written by Lingling
                 if r-1>=0 and c-1>=0 and power_map[r-1,c-1]==0 :
                     power_map[r-1,c-1]=power_map[r,c]/2
                     visited[r-1,c-1]=1
@@ -153,7 +151,6 @@ def smooth_power_map(power_map):
     for r in range(row):
         for c in range(col):
             if power_map[r,c]!=0 and visited[r,c]==0:
-                # oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooyyyyyyyyyyyy  written by Lingling
                 if r-1>=0 and c-1>=0 and power_map[r-1,c-1]==0 :
                     power_map[r-1,c-1]=power_map[r,c]/2
                     visited[r-1,c-1]=1
