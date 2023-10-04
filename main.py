@@ -1,63 +1,19 @@
-add_bc_dummynode = True 
-
-
 #====================================================================================================
-newchip = True
-newchip = False
-generate_new_sample = True 
-generate_new_sample = False
-train_new = True 
-train_new = False
-#====================================================================================================
-generate_sample_badedge = True
-generate_sample_badedge = False
-train_dummynode = True
-train_dummynode = False
-#====================================================================================================
-
-
-
-# main
 import math
 import torch
-numoftile_dim=100
-numoftile_x        = numoftile_dim
-numoftile_y        = numoftile_dim
-print("total num of tile: ", numoftile_x*numoftile_y)
-cell_dim           = 5
-numoftile_perbatch = 5
-
-
-batchtrainsize =20
-#====================================================================================================
-# tileidx = torch.tensor([5,6,7,8,9])
-# tileidx = torch.tensor([3,4,5])
-# tileidx = torch.tensor([3,4])
-# tileidx     = torch.arange(start=60, end=65)
-tileidx     = torch.arange(start=10, end=13)
-tileidx_dir = torch.tensor([1]*len(tileidx)).tolist()
-# tileidx = torch.tensor([1,4,4,5])
-# tileidx_dir = torch.tensor([2,2,1,1]).tolist()
-testidx = 19
-numoftest = 19
-#====================================================================================================
-
-#====================================================================================================
 import os
 import pickle
 import numpy as np
 import random
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
-
-
+#====================================================================================================
 # seed=259
 # random.seed(seed)
 # torch.manual_seed(seed)
 # torch.cuda.manual_seed(seed)
 # np.random.seed(seed)
 #====================================================================================================
-
 from graphmodels import *
 from create_golden import *
 from util import *
@@ -66,17 +22,32 @@ from args import *
 from scipy.ndimage import gaussian_filter
 from datetime import datetime
 import traceback
-
-np.set_printoptions(edgeitems=30, linewidth=100000, formatter=dict(float=lambda x: "%.3g" % x))
-torch.set_printoptions(edgeitems=30, linewidth=100000)
+#====================================================================================================
 args = parser.parse_args()
-
-
+numofepoch              = args.numofepoch
+inilr                   = args.inilr
+train_newgnn            = args.train_newgnn
+train_defectnode        = args.train_defectnode
+cell_dim                = args.subblock_size_xy
+numoftile_perbatch      = args.numofsubblock_xy
+generate_new_sample     = args.generate_new_sample
+generate_sample_badedge = args.generate_sample_badedge
+k1                      = args.k1
+k2                      = args.k2
 #====================================================================================================
-numofepoch = args.numofepoch
-inilr      = args.inilr
+add_bc_dummynode = True 
+batchtrainsize = 20
+numoftile_dim  = 100
+numoftile_x        = numoftile_dim
+numoftile_y        = numoftile_dim
 #====================================================================================================
-
+# tileidx = torch.tensor([5,6,7,8,9])
+# tileidx = torch.tensor([3,4,5])
+# tileidx = torch.tensor([3,4])
+# tileidx     = torch.arange(start=60, end=65)
+tileidx     = torch.arange(start=10, end=13)
+tileidx_dir = torch.tensor([1]*len(tileidx)).tolist()
+#====================================================================================================
 edgeiddict = dict()
 edgeiddict[0]=(0,0)
 edgeiddict[1]=(0,1)
@@ -94,7 +65,6 @@ def normalize(t, min_=None, max_=None):
 def comparepredict_golden(predict, golden):
     result = np.absolute(np.array(predict) - np.array(golden))
     return result, None
-
 
 def plot_im(plot_data, title, save_name,show=True,range01= False,vmin=None, vmax=None):
     fig,ax = plt.subplots()
@@ -118,18 +88,7 @@ def plot_im(plot_data, title, save_name,show=True,range01= False,vmin=None, vmax
     else:
         plt.close()
 
-
-
-
-
-
-
-
-
-
-
 def generate_power_map_fortrain(numoftrain=10,resx=20, resy=20,complex_=None):
-
     power_map_l = []
     grid        = max(resx,resy)
     #====================================================================================================
@@ -155,17 +114,10 @@ def generate_power_map_fortrain(numoftrain=10,resx=20, resy=20,complex_=None):
     #====================================================================================================
     return power_map_l
 
-
-
-
-
-
 def analysis_chip(chipinfo):
 
-    #====================================================================================================
     chipres   = chipinfo['chipres']
     chipshape = chipinfo['chipshape']
-    chipk     = chipinfo['chipk']
     #====================================================================================================
     totalresx = totalresy = 0
     for colchipidx in range(len(chipres[0])):
@@ -194,11 +146,7 @@ def analysis_chip(chipinfo):
         kmap_l  = []
         for y in range(numoftile_y):
             ##====================================================================================================
-            # if random.randint(0,1)==0:
-            #     chipk[x,y] = 0.1
-            # else:
-            #     chipk[x,y] = 1
-            kmap_np      = np.ones((tile_dim,tile_dim))*chipk[x,y]
+            kmap_np      = np.ones((tile_dim,tile_dim))
             ##====================================================================================================
             blockid_np   = np.ones((tile_dim,tile_dim))*blockassignment
             blockassignment+=1
@@ -262,14 +210,7 @@ def analysis_chip(chipinfo):
 
     return
 
-
-
-
-
-
-
 def analysis_chip_batch(chipinfo, numoftile_perbatch =10):
-
     #====================================================================================================
     totalnumnodes = chipinfo['totalnumofpixel']
     totalresx     = chipinfo['numofpixel_x']
@@ -384,9 +325,6 @@ def analysis_chip_batch(chipinfo, numoftile_perbatch =10):
     #====================================================================================================
     return
 
-
-
-
 def generate_random_badedge(chipinfo):
 
     pixel_level_shape   = chipinfo['tile_id_pixellevel'].shape
@@ -407,7 +345,7 @@ def generate_random_badedge(chipinfo):
 
 
     tile_id_foredge_singlebatch = torch.arange(len(tile_id_batch0_flatten)).reshape(tile_id_batch0.shape)
-    print(tile_id_batch0)
+    # print(tile_id_batch0)
     print(tile_id_foredge_singlebatch)
 
 
@@ -441,16 +379,12 @@ def generate_random_badedge(chipinfo):
     numofpixels_batch= (int)(numofpixels_batch)
 
     # tileidx = torch.randperm(numoftile_perbatch*numoftile_perbatch)[:numofpixels_batch]
-
     # tileidx = torch.tensor([5,6,7,8,9])
     # tileidx = torch.tensor([3,4,5])
-    print(tileidx)
-
+    # print(tileidx)
 
     badedge = set()
     badedge_l = []
-
-
     badedge_inbatch = set()
 
     for i, tmp_idx in enumerate(tileidx.tolist()):
@@ -544,24 +478,111 @@ def generate_random_badedge(chipinfo):
     chipinfo["badedge_inbatch"] = badedge_inbatch
     return
 
+def reorgnize_graph(input_np,numoftile_x, numoftile_y, chipinfo):
+    
+    if torch.is_tensor(input_np):
+        input_np = input_np.clone().detach().cpu().numpy()
+    #====================================================================================================
+    assert len(input_np)==numoftile_x*numoftile_y
+    #====================================================================================================
+    tile_dim    = chipinfo['tile_dim']
+    #====================================================================================================
+    output_np = np.zeros((numoftile_x*tile_dim, numoftile_y*tile_dim))
+
+    currx=curry=0
+    node_id = 0
+    for x in range(numoftile_x):
+        for y in range(numoftile_y):
+            if len(input_np.shape)==2:
+                node_info = input_np[node_id,:].reshape(tile_dim,tile_dim )
+            else :
+                node_info = input_np[node_id,:,:].reshape(tile_dim,tile_dim )
+            output_np[currx:currx+tile_dim, curry:curry+tile_dim] = node_info
+            curry+=tile_dim
+            node_id+=1
+
+        currx+=tile_dim
+        curry=0
+    return output_np
+
+def duplicate_edge( edge, edge_feat, num, numoftiles_perbatch, numofdummynode=0 ):
+
+    max_node_id     = edge.max().item()
+    max_possible_id = (max_node_id+1)*num
+
+
+    dummy_node_id=dict()
+    #====================================================================================================
+    if add_bc_dummynode:
+        numofdummynode+=1
+        id_=-1
+    else:
+        id_=-2
+    #====================================================================================================
+         
+    for i in range(numofdummynode):
+        dummy_node_id[id_] = max_possible_id
+        id_-=1
+        max_possible_id+=1
+
+    # print(edge.shape)
+
+    idxs        = []
+    replacepair = []
+    for i in range(len(edge[0])):
+        pair = edge[:,i]
+        if pair[0]<0 and pair[1]<0:
+            print('error')
+            exit()
+
+        if pair[0]<0 :
+            newid=dummy_node_id[pair[0].item()]
+            idxs.append(i)
+            replacepair.append((newid,   pair[1]))
+
+        elif pair[1]<0 :
+            newid=dummy_node_id[pair[1].item()]
+            idxs.append(i)
+            replacepair.append((pair[0],   newid))
+
+            
+
+
+    edge_batch_l =[]
+    edge_batch_id_l =[]
+    for sample_idx in range(num):
+
+        edge_currbatch = edge+sample_idx*numoftiles_perbatch
+
+        for i,idx in enumerate(idxs):
+            if edge[0,idx]<0:
+                edge_currbatch[0,idx]= replacepair[i][0]
+            if edge[1,idx]<0:
+                edge_currbatch[1,idx]= replacepair[i][1]
 
 
 
 
 
+        edge_batch_l.append(edge_currbatch)
+        edge_batch_id_l.append(edge_feat)
+
+    edge_tensor    = torch.hstack(edge_batch_l).to(device)
+    edge_tensor_id = torch.vstack(edge_batch_id_l).to(device)
+
+    assert edge_tensor.min().item()>=0
+
+    # print(edge_tensor.shape)
+    # print(edge_tensor)
+    # print(edge_tensor_id.shape)
+    # print(edge_tensor.max())
 
 
 
 
-
-
-
-
-
-
+    return edge_tensor, edge_tensor_id
 
 def generate_batch_edge(chipinfo):
-
     numoftile_perbatch = chipinfo['numoftile_perbatch']
 
     if 'badedge_inbatch' in chipinfo.keys():
@@ -667,7 +688,6 @@ def seperate_wholemap(input_np_flatten, golden_np_flatten, powermap_np_flatten,k
     #====================================================================================================
     chipres                      = chipinfo['chipres']
     chipshape                    = chipinfo['chipshape']
-    chipk                        = chipinfo['chipk']
     edges_l, edgemap             = chipinfo['edges']
     edges_batch_l, edgemap_batch = chipinfo['edges_batch']
     kmap_total                   = chipinfo['kmap']
@@ -695,15 +715,13 @@ def seperate_wholemap(input_np_flatten, golden_np_flatten, powermap_np_flatten,k
     for x in range(len(chipshape)):
         for y in range(len(chipshape[0])):
             #====================================================================================================
-            # curr_k = chipk[x,y].item()
             input_single_node_np = input_np[currx:currx+tile_dim, curry:curry+tile_dim]
             power_single_node_np = power_np[currx:currx+tile_dim, curry:curry+tile_dim]
             golden_single_node_np = golden_np[currx:currx+tile_dim, curry:curry+tile_dim]
 
             k_single_node_np = k_np[currx:currx+tile_dim, curry:curry+tile_dim]
             curr_k = k_single_node_np[0,0].item()
-
-            if curr_k == 100:
+            if curr_k == k1:
                 curr_k = 1
             else:
                 curr_k = 0.1
@@ -757,8 +775,8 @@ def seperate_wholemap(input_np_flatten, golden_np_flatten, powermap_np_flatten,k
 
 
 
-def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None,adddummynode=False,powermap=None,kmap=None ):
 
+def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None,adddummynode=False,powermap=None,kmap=None ):
 
     #====================================================================================================
     edges_l, edgemap             = chipinfo['edges']
@@ -783,8 +801,8 @@ def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None
     #====================================================================================================
     #====================================================================================================
     input_l  = []
-    inputp_l  = []
-    inputk_l  = []
+    inputp_l = []
+    inputk_l = []
     output_l = []
     edge_l   = []
     #====================================================================================================
@@ -803,16 +821,14 @@ def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None
                 power_map_tensor             = generate_power_map_fortrain(numoftrain=1,resx=tile_dim,resy=tile_dim)[0]
                 ##====================================================================================================
                 power_map_np = power_map_tensor.cpu().numpy()
-                k_map_np     = np.ones(power_map_np.shape)*100
+                k_map_np     = np.ones(power_map_np.shape)*k1
                 if random.uniform(0, 10)>6:
-                    k_map_np=np.ones(power_map_np.shape)*10
+                    k_map_np=np.ones(power_map_np.shape)*k2
 
                 # if random.uniform(0, 10)>-1:
                 if random.uniform(0, 10)>4:
-                # if (x+1)%3!=0:
                     pmap_l.append(power_map_np)
                 else:
-                    # pmap_l.append(power_map_np*0.0000001)
                     pmap_l.append(np.ones(power_map_np.shape)*0.0000001)
 
                 kmap_l.append(k_map_np)
@@ -842,26 +858,18 @@ def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None
     edgeinfo_batch   = [np.zeros((tile_dim*numoftile_perbatch))]*len(edges_batch_l)
     edgeinfo_single  = [np.zeros((tile_dim))]*len(edges_l)
     #====================================================================================================
-    if load_old:
-        with open('./pickles/giantmerge.pickle', "rb") as f: golden_out_merge_np=pickle.load(f)
-        with open('./pickles/giantstich.pickle', "rb") as f: golden_out_stich_np=pickle.load(f)
-    else:
-        goldengen_merge.edge_weight = edgeinfo_batch
-        goldengen_merge.badedge     = badedge_set
-        goldengen_merge.bc_pair     = edgemap_batch
-        # goldengen_merge.bc_pair     = None 
-        golden_out_merge_np         = goldengen_merge.gen(edges_l=edges_batch_l, edgemap=edgemap_batch, skipededgepair=skipededgepair).copy().reshape(kmap_total.shape).squeeze()
-        with open('./pickles/giantmerge.pickle', "wb") as f: pickle.dump((golden_out_merge_np), f,protocol=pickle.HIGHEST_PROTOCOL)
-        print('Done generating the golden') 
+    goldengen_merge.edge_weight = edgeinfo_batch
+    goldengen_merge.badedge     = badedge_set
+    goldengen_merge.bc_pair     = edgemap_batch
+    # goldengen_merge.bc_pair     = None 
+    golden_out_merge_np         = goldengen_merge.gen(edges_l=edges_batch_l, edgemap=edgemap_batch, skipededgepair=skipededgepair).copy().reshape(kmap_total.shape).squeeze()
+    print('Done generating the golden') 
 
-        goldengen_merge.edge_weight = edgeinfo_single
-        goldengen_merge.badedge     = None
-        goldengen_merge.bc_pair     = edgemap_batch
-        # goldengen_merge.bc_pair     = None 
-        golden_out_stich_np         = goldengen_merge.gen(edges_l=edges_l, edgemap=edgemap).reshape(kmap_total.shape).squeeze()
-        with open('./pickles/giantstich.pickle', "wb") as f: pickle.dump((golden_out_stich_np), f,protocol=pickle.HIGHEST_PROTOCOL)
+    goldengen_merge.edge_weight = edgeinfo_single
+    goldengen_merge.badedge     = None
+    goldengen_merge.bc_pair     = edgemap_batch
+    golden_out_stich_np         = goldengen_merge.gen(edges_l=edges_l, edgemap=edgemap).reshape(kmap_total.shape).squeeze()
 
-    # redo!!
     out_stich_total_np  = golden_out_stich_np.reshape((1, totalnumofpixel))
     golden_out_merge_np = golden_out_merge_np.reshape((1, totalnumofpixel))
     # exit()
@@ -945,132 +953,6 @@ def generate_edge_training_samples( chipinfo, load_old=False,skipededgepair=None
 
 
 
-
-
-
-
-
-
-
-
-
-def reorgnize_graph(input_np,numoftile_x, numoftile_y, chipinfo):
-    
-    if torch.is_tensor(input_np):
-        input_np = input_np.clone().detach().cpu().numpy()
-    #====================================================================================================
-    assert len(input_np)==numoftile_x*numoftile_y
-    #====================================================================================================
-    tile_dim    = chipinfo['tile_dim']
-    #====================================================================================================
-    output_np = np.zeros((numoftile_x*tile_dim, numoftile_y*tile_dim))
-
-    currx=curry=0
-    node_id = 0
-    for x in range(numoftile_x):
-        for y in range(numoftile_y):
-            if len(input_np.shape)==2:
-                node_info = input_np[node_id,:].reshape(tile_dim,tile_dim )
-            else :
-                node_info = input_np[node_id,:,:].reshape(tile_dim,tile_dim )
-            output_np[currx:currx+tile_dim, curry:curry+tile_dim] = node_info
-            curry+=tile_dim
-            node_id+=1
-
-        currx+=tile_dim
-        curry=0
-    return output_np
-
-
-
-
-
-
-
-
-
-def duplicate_edge( edge, edge_feat, num, numoftiles_perbatch, numofdummynode=0 ):
-
-    max_node_id     = edge.max().item()
-    max_possible_id = (max_node_id+1)*num
-
-
-
-
-    # print(max_node_id)
-    # print(max_possible_id)
-
-
-    dummy_node_id=dict()
-    #====================================================================================================
-    if add_bc_dummynode:
-        numofdummynode+=1
-        id_=-1
-    else:
-        id_=-2
-    #====================================================================================================
-         
-    for i in range(numofdummynode):
-        dummy_node_id[id_] = max_possible_id
-        id_-=1
-        max_possible_id+=1
-
-    # print(edge.shape)
-
-    idxs        = []
-    replacepair = []
-    for i in range(len(edge[0])):
-        pair = edge[:,i]
-        if pair[0]<0 and pair[1]<0:
-            print('error')
-            exit()
-
-        if pair[0]<0 :
-            newid=dummy_node_id[pair[0].item()]
-            idxs.append(i)
-            replacepair.append((newid,   pair[1]))
-
-        elif pair[1]<0 :
-            newid=dummy_node_id[pair[1].item()]
-            idxs.append(i)
-            replacepair.append((pair[0],   newid))
-
-            
-
-
-    edge_batch_l =[]
-    edge_batch_id_l =[]
-    for sample_idx in range(num):
-
-        edge_currbatch = edge+sample_idx*numoftiles_perbatch
-
-        for i,idx in enumerate(idxs):
-            if edge[0,idx]<0:
-                edge_currbatch[0,idx]= replacepair[i][0]
-            if edge[1,idx]<0:
-                edge_currbatch[1,idx]= replacepair[i][1]
-
-
-
-
-
-        edge_batch_l.append(edge_currbatch)
-        edge_batch_id_l.append(edge_feat)
-
-    edge_tensor    = torch.hstack(edge_batch_l).to(device)
-    edge_tensor_id = torch.vstack(edge_batch_id_l).to(device)
-
-    assert edge_tensor.min().item()>=0
-
-    # print(edge_tensor.shape)
-    # print(edge_tensor)
-    # print(edge_tensor_id.shape)
-    # print(edge_tensor.max())
-
-
-
-
-    return edge_tensor, edge_tensor_id
 
 
 
@@ -1270,7 +1152,7 @@ def train_gnn(model, data, numofepoch, chipinfo, name ='' ):
 
 
 
-def train_dummy_node(model, data, numofepoch, chipinfo, name ='' ):
+def train_defect_node(model, data, numofepoch, chipinfo, name ='' ):
 
 
     #====================================================================================================
@@ -1465,28 +1347,6 @@ def train_dummy_node(model, data, numofepoch, chipinfo, name ='' ):
 
 
 
-def subdivide(cell_dim, chipshape, chipk, chipres,ratio=2):
-    assert cell_dim%ratio ==0
-    new_cell_dim = cell_dim//ratio
-    newchipshape = np.zeros((chipshape.shape[0]*ratio,chipshape.shape[1]*ratio))
-    newchipk     = np.empty(newchipshape.shape)
-    newchipres   = np.empty((newchipshape.shape[0],newchipshape.shape[1],2))
-    for x in range(len(newchipshape)):
-        for y in range(len(newchipshape[0])):
-            oldx = x//ratio
-            oldy = y//ratio
-            newchipk[x,y]   = chipk[oldx,oldy]
-            newchipres[x,y,0] = (int)(chipres[oldx,oldy,0]//ratio)
-            newchipres[x,y,1] = (int)(chipres[oldx,oldy,1]//ratio)
-
-    newchipres = newchipres.astype(int)
-    return new_cell_dim, newchipshape, newchipk, newchipres
-
-
-
-
-
-
 
 
 
@@ -1502,26 +1362,15 @@ def test_gnn(model, data, chipinfo, show=False, idx=None, name='',dummy_node=Non
     numofnodepergraph  = numoftile_perbatch*numoftile_perbatch
 
 
-
-    # numofbatch_train = (int)(totalnumofbatch*0.3)
-    # numofbatch_val   = (int)(totalnumofbatch*0.3)
-    # numofbatch_test  = totalnumofbatch-numofbatch_train-numofbatch_val
-    # numofbatch_test  = min(numofbatch_test,(int)(numofbatch_train/0.3*0.4) )
-
     numofbatch_train = (int)(totalnumofbatch*0.8)
     numofbatch_val   = (int)(totalnumofbatch*0.15)
     numofbatch_test  = totalnumofbatch-numofbatch_train-numofbatch_val
-    # numofbatch_test  = min(numofbatch_test,(int)(numofbatch_train/0.8*0.05) )
 
-
-    # print(numofbatch_train)
-    # print(numofbatch_test)
-    # print(numofbatch_val)
 
     #====================================================================================================
-    tile_dim = chipinfo['tile_dim']
-    singlerow      = (numofbatch_train+numofbatch_val+idx)//(numoftile_x//numoftile_perbatch)
-    singlerow_mod  = (numofbatch_train+numofbatch_val+idx)%(numoftile_x//numoftile_perbatch)
+    tile_dim      = chipinfo['tile_dim']
+    singlerow     = (numofbatch_train+numofbatch_val+idx)//(numoftile_x//numoftile_perbatch)
+    singlerow_mod = (numofbatch_train+numofbatch_val+idx)%(numoftile_x//numoftile_perbatch)
     kmap=kmap.squeeze()
     kmap_curr = kmap[singlerow*tile_dim*numoftile_perbatch:(singlerow+1)*tile_dim*numoftile_perbatch, singlerow_mod*tile_dim*numoftile_perbatch:(singlerow_mod+1)*tile_dim*numoftile_perbatch, ]
     #====================================================================================================
@@ -1548,20 +1397,7 @@ def test_gnn(model, data, chipinfo, show=False, idx=None, name='',dummy_node=Non
     else:
         bc_dummynode = None
     #====================================================================================================
-    # edge_idx_val,   edge_feat_val   = duplicate_edge( edge_idx_perbatch, edge_feat_tensor_perbatch, numofbatch_val, numoftile_perbatch*numoftile_perbatch, numofdummynode)
-    # print(edge_idx_val)
-    # print(input_val_tensor.shape)
-    # print(output_val_tensor.shape)
-    # if numofdummynode !=0:
-    #     print(dummy_node.shape)
-    #     exit()
-
-
     edge_idx_test,  edge_feat_test  = duplicate_edge( edge_idx_perbatch, edge_feat_tensor_perbatch, 1, numoftile_perbatch*numoftile_perbatch,numofdummynode)
-    # edge_idx_train, edge_feat_train = duplicate_edge( edge_idx_perbatch, edge_feat_tensor_perbatch, batchtrainsize, numoftile_perbatch*numoftile_perbatch,numofdummynode)
-    #====================================================================================================
-
-
     #====================================================================================================
     model = model.to(device)
     model.eval()
@@ -1569,6 +1405,7 @@ def test_gnn(model, data, chipinfo, show=False, idx=None, name='',dummy_node=Non
     #====================================================================================================
     if idx is None:
         idx = random.randint(0, len(input_test_tensor)-1)
+
     input_batch_tensor_feat = input_test_tensor[idx:idx+1,  :,:cell_dim*cell_dim].double().to(device)
     input_batch_tensor      = input_test_tensor[idx:idx+1,  :,:].double().to(device)
     output_batch_tensor     = output_test_tensor[idx:idx+1, :,:].double().to(device)
@@ -1580,39 +1417,29 @@ def test_gnn(model, data, chipinfo, show=False, idx=None, name='',dummy_node=Non
     output_np_reorg = reorgnize_graph(output_batch_tensor.squeeze(),numoftile_perbatch, numoftile_perbatch,chipinfo)
     pred_np_reorg   = reorgnize_graph(pred_np,numoftile_perbatch, numoftile_perbatch,chipinfo)
 
-    pred_np_reorg   = gaussian_filter(pred_np_reorg, sigma=0.6)
+    pred_np_reorg   = gaussian_filter(pred_np_reorg, sigma=1)
 
-    output_np_reorg = normalize(output_np_reorg)+1
-    pred_np_reorg   = normalize(pred_np_reorg)+1
+    output_np_reorg = normalize(output_np_reorg)
+    pred_np_reorg   = normalize(pred_np_reorg)
 
 
     abs_err , _= comparepredict_golden(pred_np_reorg, output_np_reorg)
-
-    mape = np.mean( np.absolute((pred_np_reorg- output_np_reorg)/pred_np_reorg)   )
 
 
     # if os.path.exists('./result/testcase{}'.format(idx)):
         # os.system('rm -rf ./result/testcase{}'.format(idx))
     os.system('mkdir -p ./result/testcase{}'.format(idx))
-
-
     if dummy_node is not None:
-        # print('Bad edge Abs err  :', np.mean(abs_err).item())
-        # print('Bad edge Loss :', mean_squared_error(pred_np_reorg, output_np_reorg).item())
-        print('Bad mape:   ', mape.item())
-
-
+        print('Bad edge Abs err  :', np.mean(abs_err).item())
+        print('Bad edge Loss :', mean_squared_error(pred_np_reorg, output_np_reorg).item())
         plot_im(plot_data = kmap_curr,            title="", save_name='./result/testcase{}/0_kmap_bad.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = input_np_reorg,       title="", save_name='./result/testcase{}/1_input_bad.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = output_np_reorg,      title="", save_name='./result/testcase{}/2_golden_bad.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = pred_np_reorg,        title="", save_name='./result/testcase{}/3_prediction_bad.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = abs_err,              title="", save_name='./result/testcase{}/4_err_bad.png'.format(idx),show=False, range01=True)
-
     else:
-        # print('Abs err  :', np.mean(abs_err).item())
-        # print('Loss :', mean_squared_error(pred_np_reorg, output_np_reorg).item())
-        print('mape:   ', mape.item())
-
+        print('Abs err  :', np.mean(abs_err).item())
+        print('Loss :', mean_squared_error(pred_np_reorg, output_np_reorg).item())
         plot_im(plot_data = kmap_curr,            title="", save_name='./result/testcase{}/0_kmap.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = input_np_reorg,       title="", save_name='./result/testcase{}/1_input.png'.format(idx),show=False, range01=False)
         plot_im(plot_data = output_np_reorg,      title="", save_name='./result/testcase{}/2_golden.png'.format(idx),show=False, range01=False)
@@ -1639,40 +1466,26 @@ model_graph = gnn_top(c_in =input_dim,  c_out = out_dim ).double().to(device)
 #====================================================================================================
 
 
-
-
-if newchip:
-    
-    chipshape = np.zeros((numoftile_x,numoftile_y))
-    #====================================================================================================
-    chipk   = np.ones((numoftile_x, numoftile_y))*10
-    # chipk   = np.ones((numoftile_x, numoftile_y))
-    chipres = np.ones((numoftile_x, numoftile_y, 2))*cell_dim
-    chipres = chipres.astype(int)
-    #====================================================================================================
-    chipinfo             = dict()
-    chipinfo['chipshape'] = chipshape
-    chipinfo['chipk']     = chipk
-    chipinfo['chipres']   = chipres
-    chipinfo['numoftile_x']   = numoftile_x
-    chipinfo['numoftile_y']   = numoftile_y
-    chipinfo['numoftile_perbatch']   = numoftile_perbatch 
-    chipinfo['tile_dim']   = cell_dim
-
-    analysis_chip(chipinfo)
-    analysis_chip_batch(chipinfo, numoftile_perbatch =numoftile_perbatch)
-    #====================================================================================================
-    with open('./pickles/newchip.pickle', "wb") as f: pickle.dump((chipinfo), f,protocol=pickle.HIGHEST_PROTOCOL)
-else:
-    with open('./pickles/newchip.pickle', "rb") as f: chipinfo=pickle.load(f)
-
+#====================================================================================================
+chipshape = np.zeros((numoftile_x,numoftile_y))
+#====================================================================================================
+chipres = np.ones((numoftile_x, numoftile_y, 2))*cell_dim
+chipres = chipres.astype(int)
+#====================================================================================================
+chipinfo                       = dict()
+chipinfo['chipshape']          = chipshape
+chipinfo['chipres']            = chipres
+chipinfo['numoftile_x']        = numoftile_x
+chipinfo['numoftile_y']        = numoftile_y
+chipinfo['numoftile_perbatch'] = numoftile_perbatch
+chipinfo['tile_dim']           = cell_dim
+analysis_chip(chipinfo)
+analysis_chip_batch(chipinfo, numoftile_perbatch =numoftile_perbatch)
 
 #====================================================================================================
 if generate_new_sample:
-    input_batch_tensor, output_batch_tensor ,powermap_total, kmap_total   = generate_edge_training_samples(chipinfo = chipinfo,
-            # load_old = True,
-            load_old = False
-            )
+    print('INFO: Generating samples for :GNN...')
+    input_batch_tensor, output_batch_tensor ,powermap_total, kmap_total   = generate_edge_training_samples(chipinfo = chipinfo, load_old = False)
     edge_tensor, edge_feat_tensor = generate_batch_edge(chipinfo)
     data = (input_batch_tensor, output_batch_tensor,edge_tensor, edge_feat_tensor, powermap_total ,kmap_total)
     with open('./pickles/newbatchdata{}x{}.pickle'.format(numoftile_x,numoftile_y), "wb") as f: pickle.dump((data), f,protocol=pickle.HIGHEST_PROTOCOL)
@@ -1680,62 +1493,39 @@ if generate_new_sample:
 
 #====================================================================================================
 with open('./pickles/newbatchdata{}x{}.pickle'.format(numoftile_x,numoftile_y), "rb") as f: data=pickle.load(f)
-if train_new:
-    # model_graph.load_state_dict(torch.load('./pickles/{}.pt'.format('best_trained_model_mid')))
+if train_newgnn:
     train_gnn(model_graph, data, numofepoch, chipinfo, name ='mid')
     torch.save(model_graph.state_dict(), './{}.pt'.format("trained_model"))
 
+
+print('INFO: GNN training is done')
 #====================================================================================================
 # testing
 #====================================================================================================
 
-for i in range(20):
+for i in range(3):
     test_gnn(model_graph, data, chipinfo, show=True, idx=i, name ='best_trained_model_mid' )
-
 
 #====================================================================================================
 # training dummy node
 #====================================================================================================
+print('INFO: Inserting defects to chip')
 generate_random_badedge(chipinfo)
 edge_tensor, edge_feat_tensor   = generate_batch_edge(chipinfo)
 
 if generate_sample_badedge:
+    print('INFO: Generating samples with defects...')
     _,_ ,_, _, powermap,kmap = data 
-
-    #chipshape = np.zeros((numoftile_x,numoftile_y))
-    ##====================================================================================================
-    #chipk   = np.ones((numoftile_x, numoftile_y))*0.1
-    #chipres = np.ones((numoftile_x, numoftile_y, 2))*cell_dim
-    #chipres = chipres.astype(int)
-    ##====================================================================================================
-    #chipinfo             = dict()
-    #chipinfo['chipshape'] = chipshape
-    #chipinfo['chipk']     = chipk
-    #chipinfo['chipres']   = chipres
-    #chipinfo['numoftile_x']   = numoftile_x
-    #chipinfo['numoftile_y']   = numoftile_y
-    #chipinfo['numoftile_perbatch']   = numoftile_perbatch 
-    #chipinfo['tile_dim']   = cell_dim
-    #analysis_chip(chipinfo)
-    #analysis_chip_batch(chipinfo, numoftile_perbatch =numoftile_perbatch)
-    #====================================================================================================
-    #====================================================================================================
     input_batch_tensor, output_batch_tensor,_ ,_= generate_edge_training_samples(chipinfo = chipinfo, load_old = False, adddummynode=False,powermap=powermap,kmap=kmap )
     data_bad = (input_batch_tensor, output_batch_tensor,edge_tensor, edge_feat_tensor,powermap,kmap )
     with open('./pickles/newbatchdata_badedge{}x{}.pickle'.format(numoftile_x,numoftile_y), "wb") as f: pickle.dump((data_bad), f,protocol=pickle.HIGHEST_PROTOCOL)
-
-
-#====================================================================================================
-# print(input_batch_tensor.shape)    #4,26,51
-# print(output_batch_tensor.shape)   #4,25,25
 #====================================================================================================
 with open('./pickles/newbatchdata_badedge{}x{}.pickle'.format(numoftile_x,numoftile_y), "rb") as f: data_bad=pickle.load(f)
-if train_dummynode:
-    train_dummy_node(model_graph, data_bad, numofepoch*2, chipinfo, name ='best_trained_model_mid')
+if train_defectnode:
+    train_defect_node(model_graph, data_bad, numofepoch, chipinfo, name ='best_trained_model_mid')
 
-
+#====================================================================================================
 with open('./pickles/dummynode_best.pickle', "rb") as f: dummynode_feat=pickle.load(f)
-for i in range(20):
+for i in range(3):
     test_gnn(model_graph, data_bad, chipinfo, show=True, idx=i, name ='best_trained_model_mid', dummy_node= dummynode_feat )
-
 

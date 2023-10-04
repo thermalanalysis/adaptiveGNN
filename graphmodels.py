@@ -30,49 +30,6 @@ def _weights_init_4(m):
 
 
 
-class mlp(nn.Module):
-    # def __init__(self, input_dim ,out_dim, numofhiddenlayer = 4, dim_l=[64,64,64,64], num_heads=1):
-
-    def __init__(self, input_dim ,out_dim,  dim=1000, num_heads=1):
-        super(mlp, self ).__init__()
-        self.fc1 = nn.Linear(808,     dim*num_heads)
-        self.fc2 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc3 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc4 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc5 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc6 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc7 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc8 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc9 = nn.Linear(dim*num_heads, dim*num_heads)
-        self.fc10 = nn.Linear(dim*num_heads, 800)
-        self.apply(_weights_init_4)    
-
-
-    # x represents our data
-    def forward(self, x, edge, activate= True):
-        # print(x.shape)
-        # exit()
-        # act = nn.ReLU()
-        # act = nn.LeakyReLU()
-
-        act = nn.Tanh()
-        # act = nn.SELU()
-        x = x.reshape((len(x), 808))
-
-        x = act(self.fc1(x))
-        x = act(self.fc2(x))
-        x = act(self.fc3(x))
-        x = act(self.fc4(x))
-        x = act(self.fc5(x))
-        x = act(self.fc6(x))
-        x = act(self.fc7(x))
-        x = act(self.fc8(x))
-        x = act(self.fc9(x))
-        output = self.fc10(x)
-        return output
-
-
-
 
 
 
@@ -349,21 +306,13 @@ class gnn_top(nn.Module):
     def __init__(self, c_in, c_out, num_heads=1):
         super().__init__()
         # self.gnn_0=gnn(c_in, c_out)
-        interdim =512 
+        # interdim =512 
+        interdim = 128
         self.gnn_0=gnn(c_in, interdim)
         self.gnn_1=gnn(interdim, interdim)
         self.gnn_2=gnn(interdim, c_out)
-        # self.gnn_3=gnn(interdim, interdim)
-        # self.gnn_4=gnn(interdim, c_out)
-        # self.gnn_5=gnn(interdim, interdim)
-        # self.gnn_6=gnn(interdim, interdim)
-        # self.decoder = f_e(interdim*2 ,c_out, dim=128 )
 
 
-        # self.gnn_1=gnn(interdim, interdim)
-        # self.gnn_2=gnn(interdim, c_out)
-        # self.gnn_3=gnn(interdim, c_out)
-        
 
         
     def forward(self,node_feats,edges,  edge_id, bc_dummy_node=None, dummy_node_feat=None):
@@ -394,30 +343,6 @@ class gnn_top(nn.Module):
 
 
 
-        edge_indices_row = edges[0,:]
-        edge_indices_col = edges[1,:]
-        #====================================================================================================
-        # decoder part
-        #====================================================================================================
-        concat_input = torch.cat(
-            [
-                torch.index_select(input=x, index=edge_indices_row, dim=0),
-                torch.index_select(input=x, index=edge_indices_col, dim=0),
-            ],
-            dim=-1,
-        )  
-
-        edge_feat = self.decoder(concat_input, False)
-        x = scatter_add(src=edge_feat,  dim=0,index=edge_indices_row )         # shape [batch*num_nodes, embed_size]
-        return x
-
-
-
-        # x=self.gnn_2(x,edges)
-        # x=self.gnn_3(x,edges)
-        # return x
-
-
 
 
 
@@ -442,18 +367,13 @@ class gnn(nn.Module):
         self.num_heads = num_heads
 
 
-        self.f_e = f_e(c_in*2+2,  256,  dim=512   )
-        self.f_v = f_v(c_in+256, c_out ,dim=512 )
+        # self.f_e = f_e(c_in*2+2,  256,  dim=512   )
+        # self.f_v = f_v(c_in+256, c_out ,dim=512 )
 
 
-        # self.f_e = f_e(c_in*2+2,  128,  dim=128   )
-        # self.f_v = f_v(c_in+128, c_out ,dim=128 )
+        self.f_e = f_e(c_in*2+2,  128,  dim=128   )
+        self.f_v = f_v(c_in+128, c_out ,dim=128 )
 
-
-        # self.f_v = f_e(c_in+c_in, 128 ,dim=128 )
-        # self.f_final = f_e(c_out , c_out  )
-        # self.f_ini   = f_e(c_in ,c_in, dim=128 )
-        # self.apply(_weights_init_4)    
 
 
 
